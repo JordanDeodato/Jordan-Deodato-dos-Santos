@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Repositories\ApplicationRepository;
+use App\Repositories\CandidateRepository;
+use App\Repositories\Interfaces\IApplicationRepository;
+use App\Repositories\Interfaces\ICandidateRepository;
 use App\Repositories\Interfaces\IUserRepository;
 use App\Repositories\Interfaces\IVacancyRepository;
 use App\Repositories\UserRepository;
@@ -17,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(IUserRepository::class, UserRepository::class);
         $this->app->bind(IVacancyRepository::class, VacancyRepository::class);
+        $this->app->bind(IApplicationRepository::class, ApplicationRepository::class);
+        $this->app->bind(ICandidateRepository::class, CandidateRepository::class);
     }
 
     /**

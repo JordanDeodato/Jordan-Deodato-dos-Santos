@@ -3,16 +3,19 @@
 namespace App\Repositories\Interfaces;
 
 use App\Models\Vacancy;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface IVacancyRepository
 {
     /**
      * Retrieve all vacancies.
      *
-     * @return Collection<Vacancy>
+     * @param int $size 
+     * @param array $filters 
+     * 
+     * @return LengthAwarePaginator
      */
-    public function getAllVacancies(): Collection;
+    public function getAllVacancies(int $size, array $filters): LengthAwarePaginator;
     
     /**
      * Retrieve a vacancy.
@@ -47,4 +50,12 @@ interface IVacancyRepository
      * @return bool
      */
     public function deleteVacancy(string $uuid): bool;
+
+    /**
+     * Close a vacancy.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function closeVacancy(string $uuid): bool;
 }

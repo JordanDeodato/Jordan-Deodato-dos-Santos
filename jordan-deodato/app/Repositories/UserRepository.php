@@ -4,6 +4,8 @@ namespace App\Repositories;
 
 use App\Models\User;
 use App\Repositories\Interfaces\IUserRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Support\Collection;
 
 class UserRepository implements IUserRepository
@@ -11,13 +13,20 @@ class UserRepository implements IUserRepository
     /**
      * Retrieve all users.
      *
-     * @return Collection<User>
+     * @return LengthAwarePaginator
      */
-    public function getAllUsers(): Collection
+    public function getAllUsers(int $size, array $filters = []): LengthAwarePaginator
     {
-        return User::with('userType')->get();
+        return User::query()
+            ->filterByUuid($filters['uuid'] ?? null)
+            ->filterByUserTypeId($filters['user_type_id'] ?? null)
+            ->filterByName($filters['name'] ?? null)
+            ->filterByCpf($filters['cpf'] ?? null)
+            ->filterByEmail($filters['email'] ?? null)
+            ->orderByField($filters['order_by'] ?? null, $filters['order_direction'] ?? 'asc')
+            ->paginate($size);
     }
-    
+
     /**
      * Retrieve a user.
      *

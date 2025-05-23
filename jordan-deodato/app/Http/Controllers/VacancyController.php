@@ -27,17 +27,20 @@ class VacancyController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $vacancies = $this->vacancyService->getAllVacancies();
+            $perPage = (int) $request->query('per_page', 20);
+            $filters = $request->only(['uuid', 'name', 'description', 'vacancy_type_id', 'recruiter_id', 'opened', 'order_by', 'order_direction']);
+            $responseDto = $this->vacancyService->getAllVacancies($perPage, $filters);
 
             return response()->json([
                 "success" => true,
-                "data" => $vacancies,
+                "data" => $responseDto->getData(),
+                "meta" => $responseDto->getMeta(),
                 "message" => "Vagas listadas com sucesso."
             ], 200);
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao listar as vagas." . $exception->getMessage()
+                "message" => "Falha ao listar as vagas. " . $exception->getMessage()
             ], 500);
         }
     }
@@ -62,7 +65,7 @@ class VacancyController extends Controller
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao listar a vaga." . $exception->getMessage()
+                "message" => "Falha ao listar a vaga. " . $exception->getMessage()
             ], 500);
         }
     }
@@ -87,7 +90,7 @@ class VacancyController extends Controller
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao criar a vaga." . $exception->getMessage()
+                "message" => "Falha ao criar a vaga. " . $exception->getMessage()
             ], 500);
         }
     }
@@ -112,7 +115,7 @@ class VacancyController extends Controller
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao atualizar a vaga." . $exception->getMessage()
+                "message" => "Falha ao atualizar a vaga. " . $exception->getMessage()
             ], 500);
         }
     }
@@ -136,7 +139,30 @@ class VacancyController extends Controller
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao excluir a vaga." . $exception->getMessage()
+                "message" => "Falha ao excluir a vaga. " . $exception->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Close a vacancy.
+     *
+     * @param string $uuid
+     * @return JsonResponse
+     */
+    public function closeVacancy(string $uuid): JsonResponse
+    {
+        try {
+            $this->vacancyService->closeVacancy($uuid);
+
+            return response()->json([
+                "success" => true,
+                "message" => "Vaga pausada com sucesso."
+            ], 200);
+        } catch (Exception $exception) {
+            return response()->json([
+                "success" => false,
+                "message" => "Falha ao pausar a vaga. " . $exception->getMessage()
             ], 500);
         }
     }

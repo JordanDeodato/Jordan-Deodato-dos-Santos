@@ -2,11 +2,13 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\User;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Request;
 
-class UserRequest extends FormRequest
+class ApplicationRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,18 +26,8 @@ class UserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes','required', 'string', 'min:3', 'max:255'],
-            'cpf' => ['sometimes','required', 'digits:11'],
-            'email' => ['sometimes','required', 'email', 'min:5', 'max:255'],
-            'user_type_id' => ['sometimes','required', 'integer', 'min:1'],
-            'password' => [
-                'sometimes',
-                'required',
-                'string',
-                'min:8',
-                'max:64',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/'
-            ],
+            'candidate_uuid' => ['sometimes', 'required', 'string', 'min:1'],
+            'vacancy_uuid' => ['sometimes', 'required', 'string', 'min:1'],
         ];
     }
 
@@ -49,18 +41,38 @@ class UserRequest extends FormRequest
         return [
             'required' => 'O campo :attribute é obrigatório.',
             'min' => 'O campo :attribute deve ter no mínimo :min caracteres.',
-            'max' => 'O campo :attribute deve ter no máximo :max caracteres.',
-            'email' => 'O campo :attribute deve conter um endereço de e-mail válido.',
-            'digits' => 'O campo :attribute deve conter exatamente :digits dígitos.',
-            'integer' => 'O campo :attribute deve ser um número inteiro.',
-            'password.regex' => 'A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.'
         ];
     }
 
     /**
+     * Check if the user is a candidate
+     *
+     * @param $validator
+     *
+     * @return void
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $userUuid = $this->input('candidate_uuid');
+
+            $user = User::where('uuid', $userUuid)->first();
+
+            if (!$user) {
+                $validator->errors()->add('candidate_uuid', 'Candidato não encontrado.');
+                return;
+            }
+
+            if ($user->user_type_id !== 2) {
+                $validator->errors()->add('candidate_uuid', 'O usuário informado não é do tipo Candidato.');
+            }
+        });
+    }
+    
+    /**
      * Stop the requisition and show the validation messages
      *
-     * @param Validator $validator [explicite description]
+     * @param Validator $validator
      *
      * @return void
      */

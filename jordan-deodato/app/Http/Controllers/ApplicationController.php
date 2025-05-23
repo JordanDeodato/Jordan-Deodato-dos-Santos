@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UserRequest;
-use App\Services\UserService;
+use App\Http\Requests\ApplicationRequest;
+use App\Services\ApplicationService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Http\Request;
 
-class UserController extends Controller
+class ApplicationController extends Controller
 {
-    private $userService;
+    private $applicationService;
 
-    public function __construct(UserService $userService)
+    public function __construct(ApplicationService $applicationService)
     {
-        $this->userService = $userService;
+        $this->applicationService = $applicationService;
     }
 
     /**
-     * Retrieve all users.
+     * Retrieve all applications.
      *
      * @param Request $request
      *
@@ -28,26 +28,25 @@ class UserController extends Controller
     {
         try {
             $perPage = (int) $request->query('per_page', 20);
-
-            $filters = $request->only(['uuid', 'user_type_id', 'name', 'cpf', 'email', 'order_by', 'order_direction']);
-            $responseDto = $this->userService->getAllUsers($perPage, $filters);
+            $filters = $request->only(['uuid', 'candidate_uuid', 'vacancy_uuid', 'order_by', 'order_direction']);
+            $responseDto = $this->applicationService->getAllApplications($perPage, $filters);
 
             return response()->json([
                 "success" => true,
                 "data" => $responseDto->getData(),
                 "meta" => $responseDto->getMeta(),
-                "message" => "Usuários listados com sucesso."
-            ]);
+                "message" => "Candidaturas listadas com sucesso."
+            ], 200);
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao listar os usuários. " . $exception->getMessage()
+                "message" => "Falha ao listar as candidaturas. " . $exception->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Retrieve a user.
+     * Retrieve a application.
      *
      * @param Request $request
      *
@@ -56,73 +55,73 @@ class UserController extends Controller
     public function show(string $uuid): JsonResponse
     {
         try {
-            $user = $this->userService->getUserByUuid($uuid);
+            $application = $this->applicationService->getApplicationByUuid($uuid);
 
             return response()->json([
                 "success" => true,
-                "data" => $user,
-                "message" => "Usuário listado com sucesso."
+                "data" => $application,
+                "message" => "Candidatura listada com sucesso."
             ], 200);
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao listar o usuário. " . $exception->getMessage()
+                "message" => "Falha ao listar a candidatura. " . $exception->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Create a new User
+     * Create a new application
      *
-     * @param UserRequest $request
+     * @param ApplicationRequest $request
      *
      * @return JsonResponse
      */
-    public function store(UserRequest $request): JsonResponse
+    public function store(ApplicationRequest $request): JsonResponse
     {
         try {
-            $user = $this->userService->createUser($request->validated());
+            $application = $this->applicationService->createApplication($request->validated());
 
             return response()->json([
                 "success" => true,
-                "data" => $user,
-                "message" => "Usuário criado com sucesso."
+                "data" => $application,
+                "message" => "Candidatura criada com sucesso."
             ], 201);
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao criar o usuário. " . $exception->getMessage()
+                "message" => "Falha ao criar a candidatura. " . $exception->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Update an existing user.
+     * Update an existing application.
      *
      * @param string $uuid
-     * @param UserRequest $request
+     * @param ApplicationRequest $request
      * @return JsonResponse
      */
-    public function update(string $uuid, UserRequest $request): JsonResponse
+    public function update(string $uuid, ApplicationRequest $request): JsonResponse
     {
         try {
-            $user = $this->userService->updateUser($uuid, $request->validated());
+            $user = $this->applicationService->updateApplication($uuid, $request->validated());
 
             return response()->json([
                 "success" => true,
                 "data" => $user,
-                "message" => "Usuário atualizado com sucesso."
+                "message" => "Candidatura atualizada com sucesso."
             ], 200);
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao atualizar o usuário. " . $exception->getMessage()
+                "message" => "Falha ao atualizar a candidatura. " . $exception->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Delete a user.
+     * Delete a application.
      *
      * @param string $uuid
      * @return JsonResponse
@@ -130,17 +129,17 @@ class UserController extends Controller
     public function destroy(string $uuid): JsonResponse
     {
         try {
-            $this->userService->deleteUser($uuid);
+            $this->applicationService->deleteApplication($uuid);
 
             return response()->json([
                 "success" => true,
                 "data" => ["deleted" => true],
-                "message" => "Usuário excluído com sucesso."
+                "message" => "Candidatura excluída com sucesso."
             ], 200);
         } catch (Exception $exception) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao excluir o usuário. " . $exception->getMessage()
+                "message" => "Falha ao excluir a candidatura. " . $exception->getMessage()
             ], 500);
         }
     }

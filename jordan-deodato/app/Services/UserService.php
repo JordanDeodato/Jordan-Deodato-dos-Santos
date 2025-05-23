@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\DTOs\PaginatedResponseDto;
 use App\Dtos\UserDto;
 use App\Models\User;
 use App\Repositories\Interfaces\IUserRepository;
+use Illuminate\Support\Facades\Cache;
 
 class UserService
 {
@@ -18,14 +20,33 @@ class UserService
     /**
      * Retrieve all users.
      *
-     * @return array
+     * @return PaginatedResponseDto
      */
-    public function getAllUsers(): array
+    public function getAllUsers(int $perPage = 20, array $filters = []): PaginatedResponseDto
     {
-        $users = $this->userRepository->getAllUsers();
-        return UserDto::collection($users);
+        $cacheKey = 'users_' . md5(json_encode($filters) . "_page{$perPage}");
+        $cached = Cache::get($cacheKey);
+
+        if ($cached) {
+            return $cached;
+        }
+
+        $paginated = $this->userRepository->getAllUsers($perPage, $filters);
+        $users = UserDto::collection($paginated->items());
+
+        $result = new PaginatedResponseDto(
+            $users,
+            $paginated->currentPage(),
+            $paginated->perPage(),
+            $paginated->total(),
+            $paginated->lastPage()
+        );
+
+        Cache::put($cacheKey, $result, 600);
+
+        return $result;
     }
-    
+
     /**
      * Retrieve a user.
      *
@@ -35,8 +56,12 @@ class UserService
      */
     public function getUserByUuid(string $uuid): UserDto
     {
-        $user = $this->userRepository->getUserByUuid($uuid);
-        return new UserDto($user);
+        $cacheKey = 'user_' . $uuid;
+
+        return Cache::remember($cacheKey, 600, function () use ($uuid) {
+            $user = $this->userRepository->getUserByUuid($uuid);
+            return new UserDto($user);
+        });
     }
 
     /**
@@ -47,7 +72,11 @@ class UserService
      */
     public function createUser(array $data): User
     {
-        return $this->userRepository->createUser($data);
+        $user = $this->userRepository->createUser($data);
+
+        Cache::forget('users_*');
+
+        return $user;
     }
 
     /**
@@ -59,7 +88,12 @@ class UserService
      */
     public function updateUser(string $uuid, array $data): User
     {
-        return $this->userRepository->updateUser($uuid, $data);
+        $user = $this->userRepository->updateUser($uuid, $data);
+
+        Cache::forget("user_{$uuid}");
+        Cache::forget('users_*');
+
+        return $user;
     }
 
     /**
@@ -70,6 +104,11 @@ class UserService
      */
     public function deleteUser(string $uuid)
     {
-        return $this->userRepository->deleteUser($uuid);
+        $deleted = $this->userRepository->deleteUser($uuid);
+
+        Cache::forget("user_{$uuid}");
+        Cache::forget('users_*');
+
+        return $deleted;
     }
 }

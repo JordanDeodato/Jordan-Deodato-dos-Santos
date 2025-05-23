@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\DTOs\PaginatedResponseDto;
 use App\Dtos\VacancyDto;
 use App\Models\Vacancy;
 use App\Repositories\Interfaces\IVacancyRepository;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class VacancyService
 {
@@ -18,14 +21,33 @@ class VacancyService
     /**
      * Retrieve all vacancies.
      *
-     * @return array
+     * @return PaginatedResponseDto
      */
-    public function getAllVacancies(): array
+    public function getAllVacancies(int $perPage = 20, array $filters = []): PaginatedResponseDto
     {
-        $vacancies = $this->vacancyRepository->getAllVacancies();
-        return VacancyDto::collection($vacancies);
+        $cacheKey = 'vacancies_' . md5(json_encode($filters) . "_page{$perPage}");
+        $cached = Cache::get($cacheKey);
+
+        if ($cached) {
+            return $cached;
+        }
+
+        $paginated = $this->vacancyRepository->getAllVacancies($perPage, $filters);
+        $vacancies = VacancyDto::collection($paginated->items());
+
+        $result = new PaginatedResponseDto(
+            $vacancies,
+            $paginated->currentPage(),
+            $paginated->perPage(),
+            $paginated->total(),
+            $paginated->lastPage()
+        );
+
+        Cache::put($cacheKey, $result, 600);
+
+        return $result;
     }
-    
+
     /**
      * Retrieve a vacancy.
      *
@@ -35,8 +57,12 @@ class VacancyService
      */
     public function getVacancyByUuid(string $uuid): VacancyDto
     {
-        $vacancy = $this->vacancyRepository->getVacancyByUuid($uuid);
-        return new VacancyDto($vacancy);
+        $cacheKey = 'vacancy_' . $uuid;
+
+        return Cache::remember($cacheKey, 600, function () use ($uuid) {
+            $vacancy = $this->vacancyRepository->getVacancyByUuid($uuid);
+            return new VacancyDto($vacancy);
+        });
     }
 
     /**
@@ -47,7 +73,11 @@ class VacancyService
      */
     public function createVacancy(array $data): Vacancy
     {
-        return $this->vacancyRepository->createVacancy($data);
+        $application = $this->vacancyRepository->createVacancy($data);
+
+        Cache::forget('vacancies_*');
+
+        return $application;
     }
 
     /**
@@ -59,7 +89,12 @@ class VacancyService
      */
     public function updateVacancy(string $uuid, array $data): Vacancy
     {
-        return $this->vacancyRepository->updateVacancy($uuid, $data);
+        $vacancy = $this->vacancyRepository->updateVacancy($uuid, $data);
+
+        Cache::forget("vacancy_{$uuid}");
+        Cache::forget('vacancies_*');
+
+        return $vacancy;
     }
 
     /**
@@ -70,6 +105,33 @@ class VacancyService
      */
     public function deleteVacancy(string $uuid)
     {
-        return $this->vacancyRepository->deleteVacancy($uuid);
+        $deleted = $this->vacancyRepository->deleteVacancy($uuid);
+
+        Cache::forget("vacancy_{$uuid}");
+        Cache::forget('vacancies_*');
+
+        return $deleted;
+    }
+
+    /**
+     * Close a vacancy.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function closeVacancy(string $uuid)
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->user_type_id !== 1) {
+            throw new \Exception('Apenas recrutadores podem atualizar vagas.');
+        }
+
+        $vacancy = $this->vacancyRepository->closeVacancy($uuid);
+
+        Cache::forget("vacancy_{$uuid}");
+        Cache::forget('vacancies_*');
+
+        return $vacancy;
     }
 }

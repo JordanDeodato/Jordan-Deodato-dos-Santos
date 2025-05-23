@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Request;
 
 class VacancyRequest extends FormRequest
 {
@@ -24,11 +26,11 @@ class VacancyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'min:3', 'max:255'],
-            'description' => ['required', 'string', 'min:3', 'max:500'],
-            'vacancy_type_id' => ['required', 'integer', 'min:1'],
-            'recruiter_uuid' => ['required', 'string', 'min:1'],
-            'opened' => ['required', 'boolean'],
+            'name' => ['sometimes', 'required', 'string', 'min:3', 'max:255'],
+            'description' => ['sometimes', 'required', 'string', 'min:3', 'max:500'],
+            'vacancy_type_id' => ['sometimes', 'required', 'integer', 'min:1'],
+            'recruiter_uuid' => ['sometimes', 'required', 'string', 'min:1'],
+            'opened' => ['sometimes', 'required', 'boolean'],
         ];
     }
 
@@ -50,6 +52,38 @@ class VacancyRequest extends FormRequest
         ];
     }
 
+    /**
+     * Check if the user is a recruiter
+     *
+     * @param $validator
+     *
+     * @return void
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $userUuid = $this->input('recruiter_uuid');
+
+            $user = User::where('uuid', $userUuid)->first();
+
+            if (!$user) {
+                $validator->errors()->add('recruiter_uuid', 'Recrutador não encontrado.');
+                return;
+            }
+
+            if ($user->user_type_id !== 1) {
+                $validator->errors()->add('recruiter_uuid', 'O usuário informado não é do tipo Recrutador.');
+            }
+        });
+    }
+
+    /**
+     * Stop the requisition and show the validation messages
+     *
+     * @param Validator $validator [explicite description]
+     *
+     * @return void
+     */
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([

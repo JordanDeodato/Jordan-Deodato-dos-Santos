@@ -29,5 +29,13 @@ class UserSeeder extends Seeder
             "cpf" => substr(str_shuffle('01234567890123456789'),1,11),
             "user_type_id" => "2",
         ]);
+
+        User::factory()->create([
+            'name' => 'Pedrinho o Candidato',
+            "email" => 'pedrinho@teste.com',
+            "password" => Hash::make('Pedrinho1234@'),
+            "cpf" => substr(str_shuffle('01234567890123456789'),1,11),
+            "user_type_id" => "2",
+        ]);
     }
 }

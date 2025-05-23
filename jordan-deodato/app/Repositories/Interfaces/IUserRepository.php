@@ -3,17 +3,19 @@
 namespace App\Repositories\Interfaces;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface IUserRepository
 {
     /**
      * Retrieve all users.
      *
-     * @return Collection<User>
+     * @param int $size 
+     * @param array $filters 
+     * 
+     * @return LengthAwarePaginator
      */
-    public function getAllUsers(): Collection;
+    public function getAllUsers(int $size, array $filters): LengthAwarePaginator;
     
     /**
      * Retrieve a user.

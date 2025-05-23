@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,10 +17,11 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
-    protected $primaryKey = 'uuid';
+    protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'string';
 
+    protected $table = 'users';
     /**
      * The attributes that are mass assignable.
      *
@@ -64,7 +67,7 @@ class User extends Authenticatable
             $user->uuid = (string) Str::uuid();
         });
     }
-    
+
     /**
      * Relationship with user type
      *
@@ -73,5 +76,102 @@ class User extends Authenticatable
     public function userType(): BelongsTo
     {
         return $this->belongsTo(UserType::class);
+    }
+
+    /**
+     * Filter the user by uuid
+     *
+     * @param Builder $query $query
+     * @param string $uuid $uuid
+     *
+     * @return Builder
+     */
+    public function scopeFilterByUuid(Builder $query, string|null $uuid): Builder
+    {
+        if ($uuid) {
+            return $query->where('uuid', $uuid);
+        }
+        return $query;
+    }
+
+    /**
+     * Filter the user by user type id
+     *
+     * @param Builder $query $query
+     * @param int|null $userTypeId $userTypeId
+     *
+     * @return Builder
+     */
+    public function scopeFilterByUserTypeId(Builder $query, int|null $userTypeId): Builder
+    {
+        if ($userTypeId) {
+            return $query->where('user_type_id', $userTypeId);
+        }
+        return $query;
+    }
+
+    /**
+     * Filter the user by name
+     *
+     * @param Builder $query $query
+     * @param string|null $name $name
+     *
+     * @return Builder
+     */
+    public function scopeFilterByName(Builder $query, string|null $name): Builder
+    {
+        if ($name) {
+            return $query->where('name', 'like', "%{$name}%");
+        }
+        return $query;
+    }
+
+    /**
+     * Filter the user by cpf
+     *
+     * @param Builder $query $query
+     * @param $cpf $cpf
+     *
+     * @return Builder
+     */
+    public function scopeFilterByCpf(Builder $query, int|null $cpf): Builder
+    {
+        if ($cpf) {
+            return $query->where('cpf', 'like', "%{$cpf}%");
+        }
+        return $query;
+    }
+
+    /**
+     * Filter the user by email
+     *
+     * @param Builder $query $query
+     * @param string|null $email $email
+     *
+     * @return Builder
+     */
+    public function scopeFilterByEmail(Builder $query, string|null $email): Builder
+    {
+        if ($email) {
+            return $query->where('email', 'like', "%{$email}%");
+        }
+        return $query;
+    }
+
+    /**
+     * Order the query
+     *
+     * @param Builder $query $query
+     * @param string $field $field
+     * @param string $direction $direction
+     *
+     * @return Builder
+     */
+    public function scopeOrderByField($query, $field, $direction = 'asc'): Builder
+    {
+        if ($field) {
+            return $query->orderBy($field, $direction);
+        }
+        return $query;
     }
 }

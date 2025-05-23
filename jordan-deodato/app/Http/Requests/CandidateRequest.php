@@ -2,11 +2,12 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\User;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class UserRequest extends FormRequest
+class CandidateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,18 +25,12 @@ class UserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes','required', 'string', 'min:3', 'max:255'],
-            'cpf' => ['sometimes','required', 'digits:11'],
-            'email' => ['sometimes','required', 'email', 'min:5', 'max:255'],
-            'user_type_id' => ['sometimes','required', 'integer', 'min:1'],
-            'password' => [
-                'sometimes',
-                'required',
-                'string',
-                'min:8',
-                'max:64',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/'
-            ],
+            'user_uuid' => ['sometimes', 'required', 'string', 'min:1', 'max:255'],
+            'resume' => ['sometimes', 'required', 'string', 'min:1', 'max:255'],
+            'education_id' => ['sometimes', 'required', 'integer', 'min:1'],
+            'experience' => ['sometimes', 'required', 'string', 'min:1', 'max:1000'],
+            'skills' => ['sometimes', 'required', 'string', 'min:1', 'max:1000'],
+            'linkedin_profile' => ['sometimes', 'required', 'string', 'min:1', 'max:255'],
         ];
     }
 
@@ -50,11 +45,32 @@ class UserRequest extends FormRequest
             'required' => 'O campo :attribute é obrigatório.',
             'min' => 'O campo :attribute deve ter no mínimo :min caracteres.',
             'max' => 'O campo :attribute deve ter no máximo :max caracteres.',
-            'email' => 'O campo :attribute deve conter um endereço de e-mail válido.',
-            'digits' => 'O campo :attribute deve conter exatamente :digits dígitos.',
-            'integer' => 'O campo :attribute deve ser um número inteiro.',
-            'password.regex' => 'A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.'
         ];
+    }
+    
+    /**
+     * Check if the user is a candidate
+     *
+     * @param $validator
+     *
+     * @return void
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $userUuid = $this->input('user_uuid');
+
+            $user = User::where('uuid', $userUuid)->first();
+
+            if (!$user) {
+                $validator->errors()->add('user_uuid', 'Usuário não encontrado.');
+                return;
+            }
+
+            if ($user->user_type_id !== 2) {
+                $validator->errors()->add('user_uuid', 'O usuário informado não é do tipo Candidato.');
+            }
+        });
     }
 
     /**
