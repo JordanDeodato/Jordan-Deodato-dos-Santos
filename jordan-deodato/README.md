@@ -1,66 +1,216 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Recrutamento
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Documentação para instalação e execução do sistema de gerenciamento de vagas e candidaturas.
 
-## About Laravel
+## 🚀 Instalação
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. Clone o repositório:
+```bash
+git clone [url-do-repositorio]
+cd [nome-da-pasta]
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+2. Instale as dependências:
+```bash
+composer install
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+3. Configure o ambiente:
+```bash
+cp .env.example .env (Se já possuir o arquivo .env é só alterar para inserir suas informações)
+```
 
-## Learning Laravel
+4. Configure as variáveis de banco de dados no .env:
+```bash
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nome_do_banco
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠️ Configuração do Banco de Dados
+4. Execute o comando personalizado para configurar o banco:
+```bash
+php artisan setup:database
+```
+Este comando irá:
+Criar o banco de dados principal
+Criar o banco de dados de teste
+Executar todas as migrations
+Rodar os seeders
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 📊 Importação de Dados
+5. Para importar dados de um arquivo CSV:
+```bash
+php artisan import:csv caminho/para/arquivo.csv
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🔐 Autenticação
+6. O sistema usa Sanctum para autenticação. Rotas protegidas requerem token.
+Utilize o Postman, Insomnia ou outra ferramenta de acessos de API.
+Login:
+```text
+POST /api/login
+```
+Login para recrutador
+```bash
+{
+    "email": "recrutador@teste.com",
+    "password": "Recrutador12345@"
+}
+```
+Login para candidato
+```bash
+{
+    "email": "candidato@teste.com",
+    "password": "Candidato12345@"
+}
+```
+Logout (autenticado):
+```bash
+POST /api/logout
+```
+Header:
+```bash
+Authorization: Bearer [token]
+```
 
-## Laravel Sponsors
+## 📚 Rotas da API
+## 👤 Usuários
+7. Rotas para acessar as funcionalidades da aplicação (protegidas por autenticação)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```text
+GET /api/user - Listar usuários
+```
+```text
+GET /api/user/{uuid} - Mostrar usuário
+```
+```text
+POST /api/user - Criar usuário
+```
+```text
+PUT /api/user/{uuid} - Atualizar usuário
+```
+```text
+DELETE /api/user/{uuid} - Deletar usuário
+```
+```text
+DELETE /api/user/delete-all - Deletar todos usuários
+```
+```text
+DELETE /api/user/delete-by-uuid - Deletar por lista de UUIDs
+```
 
-### Premium Partners
+## 🏷️ Tipos de Usuário
+```text
+GET /api/user-type - Listar tipos
+```
+```text
+GET /api/user-type/{uuid} - Mostrar tipo
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 💼 Vagas
+```text
+GET /api/vacancy - Listar vagas
+```
+```text
+GET /api/vacancy/{uuid} - Mostrar vaga
+```
+```text
+POST /api/vacancy - Criar vaga
+```
+```text
+PUT /api/vacancy/{uuid} - Atualizar vaga
+```
+```text
+PUT /api/vacancy/close/{uuid} - Fechar vaga
+```
+```text
+DELETE /api/vacancy/{uuid} - Deletar vaga
+```
+```text
+DELETE /api/vacancy/delete-all - Deletar todas vagas
+```
+```text
+DELETE /api/vacancy/delete-by-uuid - Deletar por lista de UUIDs
+```
 
-## Contributing
+## 🏷️ Tipos de Vaga
+```text
+GET /api/vacancy-type - Listar tipos
+```
+```text
+GET /api/vacancy-type/{uuid} - Mostrar tipo
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 📝 Candidaturas
+```text
+GET /api/application - Listar candidaturas
+```
+```text
+GET /api/application/{uuid} - Mostrar candidatura
+```
+```text
+POST /api/application - Criar candidatura
+```
+```text
+PUT /api/application/{uuid} - Atualizar candidatura
+```
+```text
+DELETE /api/application/{uuid} - Deletar candidatura
+```
+```text
+DELETE /api/application/delete-all - Deletar todas candidaturas
+```
+```text
+DELETE /api/application/delete-by-uuid - Deletar por lista de UUIDs
+```
 
-## Code of Conduct
+## 👨‍💼 Candidatos
+```text
+GET /api/candidate - Listar candidatos
+```
+```text
+GET /api/candidate/{uuid} - Mostrar candidato
+```
+```text
+POST /api/candidate - Criar candidato
+```
+```text
+PUT /api/candidate/{uuid} - Atualizar candidato
+```
+```text
+DELETE /api/candidate/{uuid} - Deletar candidato
+```
+```text
+DELETE /api/candidate/delete-all - Deletar todos candidatos
+```
+```text
+DELETE /api/candidate/delete-by-uuid - Deletar por lista de UUIDs
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 📊 CSV
+```text
+GET /api/csv/analyze - Analisar dados CSV
+```
 
-## Security Vulnerabilities
+🧪 Testes
+8. Para executar os testes:
+```text
+# Rodar todos os testes
+php artisan test
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Rodar testes específicos
+php artisan test --filter NomeDoTeste
 
-## License
+# Gerar relatório de cobertura
+php artisan test --coverage-html coverage-report
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## ⚙️ Variáveis de Ambiente Importantes
+```bash
+QUEUE_CONNECTION=database # Para processamento de CSV em background
+SANCTUM_STATEFUL_DOMAINS=localhost,127.0.0.1 # Domínios para autenticação
+```
