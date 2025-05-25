@@ -12,11 +12,12 @@ class ImportedDataCsvController extends Controller
 {
     public function analyze(Request $request)
     {
+        $request->validate([
+            'start_date' => 'sometimes|date',
+            'end_date' => 'sometimes|date|after_or_equal:start_date',
+        ]);
+
         try {
-            $request->validate([
-                'start_date' => 'sometimes|date',
-                'end_date' => 'sometimes|date|after_or_equal:start_date',
-            ]);
 
             $query = DB::table('imported_data_csvs')
                 ->select(DB::raw('DATE(data) as date'))
@@ -53,7 +54,6 @@ class ImportedDataCsvController extends Controller
                     }
 
                     $temperatures = $dayData->pluck('temperatura')->toArray();
-                    $count = count($temperatures);
 
                     $analysis[] = [
                         'date' => $date,
@@ -64,12 +64,11 @@ class ImportedDataCsvController extends Controller
                         'percentage_above_10' => $this->calculatePercentage($dayData, '>', 10),
                         'percentage_below_minus_10' => $this->calculatePercentage($dayData, '<', -10),
                         'percentage_between' => $this->calculatePercentage($dayData, 'between', -10, 10),
-                        'sample_size' => $count,
                     ];
 
                 } catch (Exception $e) {
                     Log::error("Erro ao processar data {$date}: " . $e->getMessage());
-                    continue; 
+                    continue;
                 }
             }
 
