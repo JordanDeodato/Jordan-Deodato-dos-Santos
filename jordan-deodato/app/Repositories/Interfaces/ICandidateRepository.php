@@ -50,4 +50,27 @@ interface ICandidateRepository
      * @return bool
      */
     public function deleteCandidate(string $uuid): bool;
+
+    /**
+     * Delete candidates by uuid.
+     *
+     * @param string $dataUuid
+     * @return bool
+     */
+    public function deleteCandidatesByUuids(array $dataUuid): bool;
+
+    /**
+     * Delete all candidates.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllCandidates(): bool;
+    
+    /**
+     * Method candidateExists
+     *
+     * @return bool
+     */
+    public function candidateExists(): bool;
 }

@@ -77,6 +77,40 @@ class VacancyRepository implements IVacancyRepository
     }
 
     /**
+     * Delete vacancies by uuid.
+     *
+     * @param string $dataUuid
+     * @return bool
+     */
+    public function deleteVacanciesByUuids(array $dataUuid): bool
+    {
+        $vacancies = Vacancy::whereIn('uuid', $dataUuid)->get();
+
+        foreach ($vacancies as $vacancy) {
+            $vacancy->delete();
+        }
+
+        return $vacancies->isNotEmpty();
+    }
+
+    /**
+     * Delete all vacancies.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllVacancies(): bool
+    {
+        $vacancies = Vacancy::all();
+
+        foreach ($vacancies as $vacancy) {
+            $vacancy->delete();
+        }
+
+        return $vacancies->isNotEmpty();
+    }
+
+    /**
      * Close (deactivate) a vacancy.
      *
      * @param string $uuid

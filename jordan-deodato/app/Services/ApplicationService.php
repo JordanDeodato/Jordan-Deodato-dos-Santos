@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Dtos\ApplicationDto;
 use App\DTOs\PaginatedResponseDto;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Application;
 use App\Models\Vacancy;
 use App\Repositories\Interfaces\IApplicationRepository;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class ApplicationService
@@ -73,9 +75,14 @@ class ApplicationService
      */
     public function createApplication(array $data): Application
     {
-        $this->validateDuplicateApplication($data['candidate_uuid'], $data['vacancy_uuid']);
+        if (!$this->isCandidate()) {
+            throw new BusinessRuleException('Apenas candidatos podem se candidatar a vagas.');
+        }
+
         $this->validateVacancyIsOpen($data['vacancy_uuid']);
 
+        $data['candidate_uuid'] = Auth::user()->uuid;
+        $this->validateDuplicateApplication($data['vacancy_uuid']);
         $application = $this->applicationRepository->createApplication($data);
 
         Cache::forget('applications_*');
@@ -92,6 +99,10 @@ class ApplicationService
      */
     public function updateApplication(string $uuid, array $data): Application
     {
+        if (!$this->isCandidate()) {
+            throw new BusinessRuleException('Apenas candidatos podem editar sua candidatura.');
+        }
+
         $application = $this->applicationRepository->updateApplication($uuid, $data);
 
         Cache::forget("application_{$uuid}");
@@ -108,6 +119,10 @@ class ApplicationService
      */
     public function deleteApplication(string $uuid): bool
     {
+        if (!$this->isCandidate()) {
+            throw new BusinessRuleException('Apenas candidatos podem excluir sua candidatura.');
+        }
+
         $deleted = $this->applicationRepository->deleteApplication($uuid);
 
         Cache::forget("application_{$uuid}");
@@ -117,21 +132,52 @@ class ApplicationService
     }
 
     /**
+     * Delete applications by uuid.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteApplicationsByUuids(array $dataUuid): bool
+    {
+        if ($this->isCandidate()) {
+            throw new BusinessRuleException('Apenas recrutadores podem excluir múltiplas candidaturas.');
+        }
+
+        $deleted = $this->applicationRepository->deleteApplicationsByUuids($dataUuid);
+        Cache::forget('applications_*');
+
+        return $deleted;
+    }
+
+    /**
+     * Delete all applications.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllApplications(): bool
+    {
+        if ($this->isCandidate()) {
+            throw new BusinessRuleException('Apenas recrutadores podem excluir todas as candidaturas.');
+        }
+
+        $deleted = $this->applicationRepository->deleteAllApplications();
+        Cache::forget('applications_*');
+
+        return $deleted;
+    }
+
+    /**
      * Check if candidate already applied for the vacancy
      *
-     * @param string $candidateUuid
      * @param string $vacancyUuid
      *
      * @return void
      */
-    private function validateDuplicateApplication(string $candidateUuid, string $vacancyUuid): void
+    private function validateDuplicateApplication(string $vacancyUuid): void
     {
-        $exists = Application::where('candidate_uuid', $candidateUuid)
-            ->where('vacancy_uuid', $vacancyUuid)
-            ->exists();
-
-        if ($exists) {
-            throw new \Exception('Candidato já inscrito nesta vaga.');
+        if ($this->applicationRepository->applicationExists($vacancyUuid)) {
+            throw new BusinessRuleException('Candidato já inscrito nesta vaga.');
         }
     }
 
@@ -144,12 +190,23 @@ class ApplicationService
      */
     private function validateVacancyIsOpen(string $vacancyUuid): void
     {
-        $isOpen = Vacancy::where('uuid', $vacancyUuid)
-            ->where('opened', 1)
-            ->exists();
-
-        if (!$isOpen) {
-            throw new \Exception('Esta vaga já foi encerrada.');
+        if (!$this->applicationRepository->isVacancyOpen($vacancyUuid)) {
+            throw new BusinessRuleException('Esta vaga já foi encerrada.');
         }
+    }
+
+    /**
+     * Check if user is candidate
+     *
+     * @return bool
+     */
+    private function isCandidate(): bool
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->user_type_id !== 2)
+            return false;
+
+        return true;
     }
 }

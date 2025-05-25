@@ -14,11 +14,11 @@ return new class extends Migration {
             $table->id();
             $table->uuid('uuid')->unique();
             $table->foreignUuid('user_uuid')->constrained('users', 'uuid')->onDelete('cascade');
-            $table->string('resume');
+            $table->string('resume')->nullable();
             $table->foreignId('education_id')->constrained('education');
-            $table->text('experience');
-            $table->text('skills');
-            $table->string('linkedin_profile');
+            $table->text('experience')->nullable();
+            $table->text('skills')->nullable();
+            $table->string('linkedin_profile')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

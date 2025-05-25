@@ -26,7 +26,6 @@ class ApplicationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'candidate_uuid' => ['sometimes', 'required', 'string', 'min:1'],
             'vacancy_uuid' => ['sometimes', 'required', 'string', 'min:1'],
         ];
     }
@@ -43,31 +42,6 @@ class ApplicationRequest extends FormRequest
             'min' => 'O campo :attribute deve ter no mínimo :min caracteres.',
         ];
     }
-
-    /**
-     * Check if the user is a candidate
-     *
-     * @param $validator
-     *
-     * @return void
-     */
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            $userUuid = $this->input('candidate_uuid');
-
-            $user = User::where('uuid', $userUuid)->first();
-
-            if (!$user) {
-                $validator->errors()->add('candidate_uuid', 'Candidato não encontrado.');
-                return;
-            }
-
-            if ($user->user_type_id !== 2) {
-                $validator->errors()->add('candidate_uuid', 'O usuário informado não é do tipo Candidato.');
-            }
-        });
-    }
     
     /**
      * Stop the requisition and show the validation messages
@@ -82,6 +56,6 @@ class ApplicationRequest extends FormRequest
             'success' => false,
             'message' => 'Erro de validação',
             'errors' => $validator->errors()
-        ], 422));
+        ], 403));
     }
 }

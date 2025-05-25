@@ -50,4 +50,20 @@ interface IUserRepository
      * @return bool
      */
     public function deleteUser(string $uuid): bool;
+
+    /**
+     * Delete users by uuid.
+     *
+     * @param string $dataUuid
+     * @return bool
+     */
+    public function deleteUsersByUuids(array $dataUuid): bool;
+
+    /**
+     * Delete all users.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllUsers(): bool;
 }

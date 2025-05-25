@@ -111,4 +111,32 @@ class UserService
 
         return $deleted;
     }
+
+    /**
+     * Delete users by uuid.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteUsersByUuids(array $dataUuid): bool
+    {
+        $deleted = $this->userRepository->deleteUsersByUuids($dataUuid);
+        Cache::forget('users_*');
+
+        return $deleted;
+    }
+
+    /**
+     * Delete all users.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllUsers(): bool
+    {
+        $deleted = $this->userRepository->deleteAllUsers();
+        Cache::forget('users_*');
+
+        return $deleted;
+    }
 }

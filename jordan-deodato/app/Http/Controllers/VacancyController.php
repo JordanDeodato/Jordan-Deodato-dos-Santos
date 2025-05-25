@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Requests\VacancyRequest;
 use App\Services\VacancyService;
 use Illuminate\Http\JsonResponse;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class VacancyController extends Controller
 {
@@ -87,10 +91,34 @@ class VacancyController extends Controller
                 "data" => $vacancy,
                 "message" => "Vaga criada com sucesso."
             ], 201);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao criar a vaga. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "errors" => $e->errors()
+            ], 422);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Entidade não encontrada."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro inesperado. " . $e->getMessage()
             ], 500);
         }
     }
@@ -112,10 +140,27 @@ class VacancyController extends Controller
                 "data" => $vacancy,
                 "message" => "Vaga atualizada com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao atualizar a vaga. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Candidatura não encontrada."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao atualizar candidatura. " . $e->getMessage()
             ], 500);
         }
     }
@@ -136,10 +181,117 @@ class VacancyController extends Controller
                 "data" => ["deleted" => true],
                 "message" => "Vaga excluída com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao excluir a vaga. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Candidatura não encontrada."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao excluir candidatura. " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete vacancies by uuid.
+     *
+     * @param string $uuid
+     * @return JsonResponse
+     */
+    public function deleteByUuid(Request $request): JsonResponse
+    {
+        try {
+            $uuids = $request->input('uuids');
+
+            if (!is_array($uuids) || empty($uuids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'É necessário fornecer uma lista de UUIDs válidos.'
+                ], 422);
+            }
+
+            $this->vacancyService->deleteVacanciesByUuids($uuids);
+
+            return response()->json([
+                "success" => true,
+                "data" => ["deleted" => true],
+                "message" => "Vagas excluídas com sucesso."
+            ], 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Vagas não encontradas."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao excluir as vagas. " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete all vacancies.
+     *
+     * @return JsonResponse
+     */
+    public function deleteAll(): JsonResponse
+    {
+        try {
+            $this->vacancyService->deleteAllVacancies();
+
+            return response()->json([
+                "success" => true,
+                "data" => ["deleted" => true],
+                "message" => "Todas as vagas foram excluídas com sucesso."
+            ], 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Vagas não encontradas."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao excluir todas as vagas. " . $e->getMessage()
             ], 500);
         }
     }
@@ -159,10 +311,27 @@ class VacancyController extends Controller
                 "success" => true,
                 "message" => "Vaga pausada com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao pausar a vaga. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Candidatura não encontrada."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao excluir candidatura. " . $e->getMessage()
             ], 500);
         }
     }

@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Candidate;
 use App\Repositories\Interfaces\ICandidateRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class CandidateRepository implements ICandidateRepository
 {
@@ -74,5 +75,52 @@ class CandidateRepository implements ICandidateRepository
     public function deleteCandidate(string $uuid): bool
     {
         return Candidate::where('uuid', $uuid)->delete() > 0;
+    }
+
+    /**
+     * Delete candidates by uuid.
+     *
+     * @param string $dataUuid
+     * @return bool
+     */
+    public function deleteCandidatesByUuids(array $dataUuid): bool
+    {
+        $candidates = Candidate::whereIn('uuid', $dataUuid)->get();
+
+        foreach ($candidates as $candidate) {
+            $candidate->delete();
+        }
+
+        return $candidates->isNotEmpty();
+    }
+
+    /**
+     * Delete all candidates.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllCandidates(): bool
+    {
+        $candidates = Candidate::all();
+
+        foreach ($candidates as $candidate) {
+            $candidate->delete();
+        }
+
+        return $candidates->isNotEmpty();
+    }
+    
+    /**
+     * Method candidateExists
+     *
+     * @return bool
+     */
+    public function candidateExists(): bool
+    {
+        $user = Auth::user();
+
+        return Candidate::where('user_uuid', $user->uuid)
+            ->exists();
     }
 }

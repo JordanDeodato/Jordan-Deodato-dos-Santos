@@ -5,12 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Education extends Model
+class ImportedDataCsv extends Model
 {
     use HasFactory;
 
+    protected $table = 'imported_data_csvs';
+
     protected $fillable = [
-        'id',
-        'name'
+        'data',
+        'temperatura'
+    ];
+
+    protected $casts = [
+        'data' => 'datetime'
     ];
 }

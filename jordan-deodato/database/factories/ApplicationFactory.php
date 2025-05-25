@@ -20,8 +20,8 @@ class ApplicationFactory extends Factory
     public function definition(): array
     {
         return [
-            'candidate_uuid' => User::where('user_type_id', 2)->inRandomOrder()->first()?->uuid ?? Str::uuid(),
-            'vacancy_uuid' => Vacancy::inRandomOrder()->first()?->uuid ?? Str::uuid(),
+            'candidate_uuid' => User::factory()->create(['user_type_id' => 2])->uuid,
+            'vacancy_uuid' => Vacancy::factory()->create()->uuid,
         ];
     }
 }

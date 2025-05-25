@@ -29,7 +29,6 @@ class VacancyRequest extends FormRequest
             'name' => ['sometimes', 'required', 'string', 'min:3', 'max:255'],
             'description' => ['sometimes', 'required', 'string', 'min:3', 'max:500'],
             'vacancy_type_id' => ['sometimes', 'required', 'integer', 'min:1'],
-            'recruiter_uuid' => ['sometimes', 'required', 'string', 'min:1'],
             'opened' => ['sometimes', 'required', 'boolean'],
         ];
     }
@@ -50,31 +49,6 @@ class VacancyRequest extends FormRequest
             'integer' => 'O campo :attribute deve ser um número inteiro.',
             'password.regex' => 'A senha deve conter pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.'
         ];
-    }
-
-    /**
-     * Check if the user is a recruiter
-     *
-     * @param $validator
-     *
-     * @return void
-     */
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            $userUuid = $this->input('recruiter_uuid');
-
-            $user = User::where('uuid', $userUuid)->first();
-
-            if (!$user) {
-                $validator->errors()->add('recruiter_uuid', 'Recrutador não encontrado.');
-                return;
-            }
-
-            if ($user->user_type_id !== 1) {
-                $validator->errors()->add('recruiter_uuid', 'O usuário informado não é do tipo Recrutador.');
-            }
-        });
     }
 
     /**

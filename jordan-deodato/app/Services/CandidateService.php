@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Dtos\CandidateDto;
 use App\DTOs\PaginatedResponseDto;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Candidate;
 use App\Repositories\Interfaces\ICandidateRepository;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class CandidateService
@@ -72,6 +74,11 @@ class CandidateService
      */
     public function createCandidate(array $data): Candidate
     {
+        if (!$this->isCandidate()) {
+            throw new BusinessRuleException('Apenas candidatos podem se candidatar a vagas.');
+        }
+
+        $data['user_uuid'] = Auth::user()->uuid;
         $this->validateDuplicateRegistration($data['user_uuid']);
 
         $candidate = $this->candidateRepository->createCandidate($data);
@@ -99,7 +106,7 @@ class CandidateService
     }
 
     /**
-     * Delete a Candidate.
+     * Delete a candidate.
      *
      * @param string $uuid
      * @return bool
@@ -115,19 +122,67 @@ class CandidateService
     }
 
     /**
-     * Check if candidate has been registred
+     * Delete candidates by uuid.
      *
-     * @param string $userUuid
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteCandidatesByUuids(array $dataUuid): bool
+    {
+        if ($this->isCandidate()) {
+            throw new BusinessRuleException('Apenas recrutadores podem excluir múltiplos candidatos.');
+        }
+
+        $deleted = $this->candidateRepository->deleteCandidatesByUuids($dataUuid);
+        Cache::forget('candidates_*');
+
+        return $deleted;
+    }
+
+    /**
+     * Delete all candidates.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllCandidates(): bool
+    {
+        if ($this->isCandidate()) {
+            throw new BusinessRuleException('Apenas recrutadores podem excluir todas os candidatos.');
+        }
+
+        $deleted = $this->candidateRepository->deleteAllCandidates();
+        Cache::forget('candidates_*');
+
+        return $deleted;
+    }
+
+    /**
+     * Check if candidate has been registred
      *
      * @return void
      */
-    private function validateDuplicateRegistration(string $userUuid): void
+    protected  function validateDuplicateRegistration(): void
     {
-        $exists = Candidate::where('user_uuid', $userUuid)
-            ->exists();
+        $exists = $this->candidateRepository->candidateExists();        
 
         if ($exists) {
-            throw new \Exception('Candidato já registrado.');
+            throw new BusinessRuleException('Candidato já registrado.');
         }
+    }
+
+    /**
+     * Check if user is candidate
+     *
+     * @return bool
+     */
+    protected  function isCandidate(): bool
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->user_type_id !== 2)
+            return false;
+
+        return true;
     }
 }

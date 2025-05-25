@@ -19,12 +19,12 @@ class CandidateFactory extends Factory
      */
     public function definition(): array
     {
-        $education = Education::inRandomOrder()->first();
+        $education = Education::inRandomOrder()->first() ?? Education::factory()->create();
 
         return [
             'user_uuid' => User::where('user_type_id', 2)->inRandomOrder()->first()?->uuid ?? Str::uuid(),
             'resume' => $this->faker->url(),
-            'education_id' => $education ? $education->id : null,
+            'education_id' => $education->id,
             'experience' => $this->faker->paragraphs(3, true),
             'skills' => $this->faker->words(5, true),
             'linkedin_profile' => $this->faker->url(),

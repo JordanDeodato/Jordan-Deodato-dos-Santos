@@ -26,11 +26,11 @@ class CandidateRequest extends FormRequest
     {
         return [
             'user_uuid' => ['sometimes', 'required', 'string', 'min:1', 'max:255'],
-            'resume' => ['sometimes', 'required', 'string', 'min:1', 'max:255'],
+            'resume' => ['sometimes', 'string', 'min:1', 'max:255'],
             'education_id' => ['sometimes', 'required', 'integer', 'min:1'],
-            'experience' => ['sometimes', 'required', 'string', 'min:1', 'max:1000'],
-            'skills' => ['sometimes', 'required', 'string', 'min:1', 'max:1000'],
-            'linkedin_profile' => ['sometimes', 'required', 'string', 'min:1', 'max:255'],
+            'experience' => ['sometimes', 'string', 'min:1', 'max:1000'],
+            'skills' => ['sometimes', 'string', 'min:1', 'max:1000'],
+            'linkedin_profile' => ['sometimes', 'string', 'min:1', 'max:255'],
         ];
     }
 
@@ -46,31 +46,6 @@ class CandidateRequest extends FormRequest
             'min' => 'O campo :attribute deve ter no mínimo :min caracteres.',
             'max' => 'O campo :attribute deve ter no máximo :max caracteres.',
         ];
-    }
-    
-    /**
-     * Check if the user is a candidate
-     *
-     * @param $validator
-     *
-     * @return void
-     */
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            $userUuid = $this->input('user_uuid');
-
-            $user = User::where('uuid', $userUuid)->first();
-
-            if (!$user) {
-                $validator->errors()->add('user_uuid', 'Usuário não encontrado.');
-                return;
-            }
-
-            if ($user->user_type_id !== 2) {
-                $validator->errors()->add('user_uuid', 'O usuário informado não é do tipo Candidato.');
-            }
-        });
     }
 
     /**

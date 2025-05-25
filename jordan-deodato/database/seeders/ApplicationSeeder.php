@@ -18,8 +18,8 @@ class ApplicationSeeder extends Seeder
         $candidates = User::where('user_type_id', 2)->get();
         $vacancy = Vacancy::first();
 
-        if (!$candidates) {
-            $this->command->warn('Nenhum candidato encontrado para candidatar as vagas.');
+        if ($candidates->isEmpty() || !$vacancy) {
+            $this->command->warn('Necessário ao menos um candidato e uma vaga para criar aplicações.');
             return;
         }
 

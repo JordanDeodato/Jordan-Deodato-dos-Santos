@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\BusinessRuleException;
 use App\Http\Requests\CandidateRequest;
 use App\Services\CandidateService;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class CandidateController extends Controller
 {
@@ -37,10 +41,10 @@ class CandidateController extends Controller
                 "meta" => $responseDto->getMeta(),
                 "message" => "Candidatos listados com sucesso."
             ]);
-        } catch (Exception $exception) {
+        } catch (Exception $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao listar os candidatos. " . $exception->getMessage()
+                "message" => "Falha ao listar os candidatos. " . $e->getMessage()
             ], 500);
         }
     }
@@ -62,10 +66,10 @@ class CandidateController extends Controller
                 "data" => $candidate,
                 "message" => "Candidato listado com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (Exception $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao listar a candidatura. " . $exception->getMessage()
+                "message" => "Falha ao listar a candidatura. " . $e->getMessage()
             ], 500);
         }
     }
@@ -87,10 +91,34 @@ class CandidateController extends Controller
                 "data" => $candidate,
                 "message" => "Candidato criado com sucesso."
             ], 201);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao criar o candidaturo. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "errors" => $e->errors()
+            ], 422);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Entidade não encontrada."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro inesperado. " . $e->getMessage()
             ], 500);
         }
     }
@@ -112,10 +140,34 @@ class CandidateController extends Controller
                 "data" => $user,
                 "message" => "Candidato atualizado com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao atualizar o candidaturo. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "errors" => $e->errors()
+            ], 422);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Entidade não encontrada."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro inesperado. " . $e->getMessage()
             ], 500);
         }
     }
@@ -136,10 +188,117 @@ class CandidateController extends Controller
                 "data" => ["deleted" => true],
                 "message" => "Candidato excluído com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao excluir o candidato. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Entidade não encontrada."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro inesperado. " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete candidates by uuid.
+     *
+     * @param string $uuid
+     * @return JsonResponse
+     */
+    public function deleteByUuid(Request $request): JsonResponse
+    {
+        try {
+            $uuids = $request->input('uuids');
+
+            if (!is_array($uuids) || empty($uuids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'É necessário fornecer uma lista de UUIDs válidos.'
+                ], 422);
+            }
+
+            $this->candidateService->deleteCandidatesByUuids($uuids);
+
+            return response()->json([
+                "success" => true,
+                "data" => ["deleted" => true],
+                "message" => "Candidatos foram excluídas com sucesso."
+            ], 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Candidatos não encontradas."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao excluir os candidatos. " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete all application.
+     *
+     * @return JsonResponse
+     */
+    public function deleteAll(): JsonResponse
+    {
+        try {
+            $this->candidateService->deleteAllCandidates();
+
+            return response()->json([
+                "success" => true,
+                "data" => ["deleted" => true],
+                "message" => "Todas os candidatos foram excluídas com sucesso."
+            ], 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Candidatos não encontradas."
+            ], 404);
+
+        } catch (BusinessRuleException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao excluir todas os candidatos. " . $e->getMessage()
             ], 500);
         }
     }

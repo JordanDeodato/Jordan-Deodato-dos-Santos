@@ -14,6 +14,7 @@ class Application extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'uuid',
         'candidate_uuid',
         'vacancy_uuid'
     ];

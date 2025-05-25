@@ -16,7 +16,7 @@ interface IVacancyRepository
      * @return LengthAwarePaginator
      */
     public function getAllVacancies(int $size, array $filters): LengthAwarePaginator;
-    
+
     /**
      * Retrieve a vacancy.
      *
@@ -58,4 +58,20 @@ interface IVacancyRepository
      * @return bool
      */
     public function closeVacancy(string $uuid): bool;
+
+    /**
+     * Delete vacancies by uuid.
+     *
+     * @param string $dataUuid
+     * @return bool
+     */
+    public function deleteVacanciesByUuids(array $dataUuid): bool;
+
+    /**
+     * Delete all vacancies.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllVacancies(): bool;
 }

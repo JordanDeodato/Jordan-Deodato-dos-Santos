@@ -16,6 +16,7 @@ class Vacancy extends Model
     protected $table = 'vacancies';
 
     protected $fillable = [
+        'uuid',
         'name',
         'description',
         'vacancy_type_id',

@@ -50,4 +50,38 @@ interface IApplicationRepository
      * @return bool
      */
     public function deleteApplication(string $uuid): bool;
+
+    /**
+     * Delete applications by uuid.
+     *
+     * @param string $dataUuid
+     * @return bool
+     */
+    public function deleteApplicationsByUuids(array $dataUuid): bool;
+
+    /**
+     * Delete all applications.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllApplications(): bool;
+
+    /**
+     * Method validateDuplicateApplication
+     *
+     * @param string $vacancyUuid [explicite description]
+     *
+     * @return bool
+     */
+    public function applicationExists(string $vacancyUuid): bool;
+    
+    /**
+     * check if vacancy is open
+     *
+     * @param string $vacancyUuid [explicite description]
+     *
+     * @return bool
+     */
+    public function isVacancyOpen(string $vacancyUuid): bool;
 }

@@ -75,4 +75,38 @@ class UserRepository implements IUserRepository
     {
         return User::where('uuid', $uuid)->delete() > 0;
     }
+
+    /**
+     * Delete users by uuid.
+     *
+     * @param string $dataUuid
+     * @return bool
+     */
+    public function deleteUsersByUuids(array $dataUuid): bool
+    {
+        $users = User::whereIn('uuid', $dataUuid)->get();
+
+        foreach ($users as $user) {
+            $user->delete();
+        }
+
+        return $users->isNotEmpty();
+    }
+
+    /**
+     * Delete all users.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllUsers(): bool
+    {
+        $users = User::all();
+
+        foreach ($users as $user) {
+            $user->delete();
+        }
+
+        return $users->isNotEmpty();
+    }
 }

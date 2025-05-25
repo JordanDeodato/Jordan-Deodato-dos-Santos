@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\PaginatedResponseDto;
 use App\Dtos\VacancyDto;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Vacancy;
 use App\Repositories\Interfaces\IVacancyRepository;
 use Illuminate\Support\Facades\Auth;
@@ -73,8 +74,13 @@ class VacancyService
      */
     public function createVacancy(array $data): Vacancy
     {
-        $application = $this->vacancyRepository->createVacancy($data);
+        if (!$this->checkPermission()) {
+            throw new BusinessRuleException('Apenas recrutadores podem criar vagas.');
+        }
 
+        $data['recruiter_uuid'] = Auth::user()->uuid;
+
+        $application = $this->vacancyRepository->createVacancy($data);
         Cache::forget('vacancies_*');
 
         return $application;
@@ -89,6 +95,10 @@ class VacancyService
      */
     public function updateVacancy(string $uuid, array $data): Vacancy
     {
+        if (!$this->checkPermission()) {
+            throw new BusinessRuleException('Apenas recrutadores podem editar vagas.');
+        }
+
         $vacancy = $this->vacancyRepository->updateVacancy($uuid, $data);
 
         Cache::forget("vacancy_{$uuid}");
@@ -105,9 +115,49 @@ class VacancyService
      */
     public function deleteVacancy(string $uuid)
     {
+        if (!$this->checkPermission()) {
+            throw new BusinessRuleException('Apenas recrutadores podem excluir vagas.');
+        }
+
         $deleted = $this->vacancyRepository->deleteVacancy($uuid);
 
         Cache::forget("vacancy_{$uuid}");
+        Cache::forget('vacancies_*');
+
+        return $deleted;
+    }
+
+    /**
+     * Delete vacancies by uuid.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteVacanciesByUuids(array $dataUuid): bool
+    {
+        if (!$this->checkPermission()) {
+            throw new BusinessRuleException('Apenas recrutadores podem excluir múltiplas vagas.');
+        }
+
+        $deleted = $this->vacancyRepository->deleteVacanciesByUuids($dataUuid);
+        Cache::forget('vacancies_*');
+
+        return $deleted;
+    }
+
+    /**
+     * Delete all vacancies.
+     *
+     * @param string $uuid
+     * @return bool
+     */
+    public function deleteAllVacancies(): bool
+    {
+        if (!$this->checkPermission()) {
+            throw new BusinessRuleException('Apenas recrutadores podem excluir todas as vagas.');
+        }
+
+        $deleted = $this->vacancyRepository->deleteAllVacancies();
         Cache::forget('vacancies_*');
 
         return $deleted;
@@ -121,10 +171,8 @@ class VacancyService
      */
     public function closeVacancy(string $uuid)
     {
-        $user = Auth::user();
-
-        if (!$user || $user->user_type_id !== 1) {
-            throw new \Exception('Apenas recrutadores podem atualizar vagas.');
+        if (!$this->checkPermission()) {
+            throw new BusinessRuleException('Apenas recrutadores podem pausar vagas.');
         }
 
         $vacancy = $this->vacancyRepository->closeVacancy($uuid);
@@ -133,5 +181,20 @@ class VacancyService
         Cache::forget('vacancies_*');
 
         return $vacancy;
+    }
+
+    /**
+     * Method checkPermission
+     *
+     * @return bool
+     */
+    private function checkPermission(): bool
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->user_type_id !== 1)
+            return false;
+
+        return true;
     }
 }

@@ -7,6 +7,9 @@ use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -38,10 +41,10 @@ class UserController extends Controller
                 "meta" => $responseDto->getMeta(),
                 "message" => "Usuários listados com sucesso."
             ]);
-        } catch (Exception $exception) {
+        } catch (Exception $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao listar os usuários. " . $exception->getMessage()
+                "message" => "Falha ao listar os usuários. " . $e->getMessage()
             ], 500);
         }
     }
@@ -63,10 +66,10 @@ class UserController extends Controller
                 "data" => $user,
                 "message" => "Usuário listado com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (Exception $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao listar o usuário. " . $exception->getMessage()
+                "message" => "Falha ao listar o usuário. " . $e->getMessage()
             ], 500);
         }
     }
@@ -88,10 +91,29 @@ class UserController extends Controller
                 "data" => $user,
                 "message" => "Usuário criado com sucesso."
             ], 201);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao criar o usuário. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "errors" => $e->errors()
+            ], 422);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Entidade não encontrada."
+            ], 404);
+
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro inesperado. " . $e->getMessage()
             ], 500);
         }
     }
@@ -113,10 +135,29 @@ class UserController extends Controller
                 "data" => $user,
                 "message" => "Usuário atualizado com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao atualizar o usuário. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "errors" => $e->errors()
+            ], 422);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Entidade não encontrada."
+            ], 404);
+
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro inesperado. " . $e->getMessage()
             ], 500);
         }
     }
@@ -137,10 +178,102 @@ class UserController extends Controller
                 "data" => ["deleted" => true],
                 "message" => "Usuário excluído com sucesso."
             ], 200);
-        } catch (Exception $exception) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 "success" => false,
-                "message" => "Falha ao excluir o usuário. " . $exception->getMessage()
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Entidade não encontrada."
+            ], 404);
+
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro inesperado. " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete users by uuid.
+     *
+     * @param string $uuid
+     * @return JsonResponse
+     */
+    public function deleteByUuid(Request $request): JsonResponse
+    {
+        try {
+            $uuids = $request->input('uuids');
+
+            if (!is_array($uuids) || empty($uuids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'É necessário fornecer uma lista de UUIDs válidos.'
+                ], 422);
+            }
+
+            $this->userService->deleteUsersByUuids($uuids);
+
+            return response()->json([
+                "success" => true,
+                "data" => ["deleted" => true],
+                "message" => "Usuários foram excluídos com sucesso."
+            ], 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Usuários não encontrados."
+            ], 404);
+
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao excluir os usuários. " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete all users.
+     *
+     * @return JsonResponse
+     */
+    public function deleteAll(): JsonResponse
+    {
+        try {
+            $this->userService->deleteAllUsers();
+
+            return response()->json([
+                "success" => true,
+                "data" => ["deleted" => true],
+                "message" => "Todas os usuários foram excluídos com sucesso."
+            ], 200);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage()
+            ], 403);
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Usuários não o."
+            ], 404);
+
+        } catch (Exception $e) {
+            return response()->json([
+                "success" => false,
+                "message" => "Erro ao excluir todas os usuários. " . $e->getMessage()
             ], 500);
         }
     }

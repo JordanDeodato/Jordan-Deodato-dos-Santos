@@ -15,27 +15,22 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::factory()->create([
-            'name' => 'João o Recrutador',
-            "email" => 'recrutadorjoão@teste.com',
-            "password" => Hash::make('Joao1234@'),
+            'name' => 'Recrutador',
+            "email" => 'recrutador@teste.com',
+            "password" => Hash::make('Recrutador12345@'),
             "cpf" => substr(str_shuffle('01234567890123456789'),1,11),
             "user_type_id" => "1",
         ]);
 
         User::factory()->create([
-            'name' => 'Zezinho o Candidato',
-            "email" => 'candidatozezinho@teste.com',
-            "password" => Hash::make('Zezinho1234@'),
+            'name' => 'Candidato',
+            "email" => 'candidato@teste.com',
+            "password" => Hash::make('Candidato12345@'),
             "cpf" => substr(str_shuffle('01234567890123456789'),1,11),
             "user_type_id" => "2",
         ]);
 
-        User::factory()->create([
-            'name' => 'Pedrinho o Candidato',
-            "email" => 'pedrinho@teste.com',
-            "password" => Hash::make('Pedrinho1234@'),
-            "cpf" => substr(str_shuffle('01234567890123456789'),1,11),
-            "user_type_id" => "2",
-        ]);
+        User::factory()->recruiter()->count(10)->create();
+        User::factory()->candidate()->count(50)->create();
     }
 }
