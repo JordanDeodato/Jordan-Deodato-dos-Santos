@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
             "email" => 'candidato@teste.com',
             "password" => Hash::make('Candidato12345@'),
             "cpf" => substr(str_shuffle('01234567890123456789'),1,11),
-            "user_type_id" => "2",
+            "user_type_id" => "2", 
         ]);
 
         User::factory()->recruiter()->count(10)->create();
