@@ -1,82 +1,216 @@
-#  Teste para candidatos à vaga de Desenvolvedor PHP Estech
+# Sistema de Recrutamento
 
-Olá caro desenvolvedor, nesse teste analisaremos seu conhecimento geral e inclusive velocidade de desenvolvimento. Abaixo explicaremos tudo o que será necessário.
+Documentação para instalação e execução do sistema de gerenciamento de vagas e candidaturas.
 
-##  Instruções
+## 🚀 Instalação
 
-O desafio consiste em implementar uma aplicação API Rest utilizando o framework PHP Laravel, um banco de dados relacional (Mysql), que terá como finalidade a inscrição de candidatos a uma oportunidade de emprego.
+1. Clone o repositório:
+```bash
+git clone [url-do-repositorio]
+cd [nome-da-pasta]
+```
 
-Sua aplicação deve possuir:
+2. Instale as dependências:
+```bash
+composer install
+```
 
-- CRUD de usuários:
-	- Criar, editar, excluir e listar usuários.
-	- O usuário pode ser Recrutador ou Candidato.
+3. Configure o ambiente:
+```bash
+cp .env.example .env (Se já possuir o arquivo .env é só alterar para inserir suas informações)
+```
 
-- CRUD de vagas:
-	- Criar, editar, excluir e listar vagas.
-	- A vaga pode ser CLT, Pessoa Jurídica ou Freelancer.
+4. Configure as variáveis de banco de dados no .env:
+```bash
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nome_do_banco
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-- CRUD de candidatos:
-	- Criar, editar, excluir e listar candidatos.
-	- Um candidato pode se inscrever em uma ou mais vagas.
-	- Deve ser ser possível "pausar" a vaga, evitando a inscrição de candidatos (Somente Recrutador).
+## 🛠️ Configuração do Banco de Dados
+4. Execute o comando personalizado para configurar o banco:
+```bash
+php artisan setup:database
+```
+Este comando irá:
+Criar o banco de dados principal
+Criar o banco de dados de teste
+Executar todas as migrations
+Rodar os seeders
 
-- Cada CRUD:
-	- Deve ser filtrável e ordenável por qualquer campo, e possuir paginação de 20 itens.
-	- Deve implementar SoftDelete.
-	- Implementar validações de campos obrigatórios e tipos de dados.
-	- Implementar Cache utilizando Redis.
-	- Testes automatizados.
+## 📊 Importação de Dados
+5. Para importar dados de um arquivo CSV:
+```bash
+php artisan import:csv caminho/para/arquivo.csv
+```
 
-- Criar um comando para importação de dados a partir [deste arquivo](/example.csv) csv:
-	- Deve ser implementado de maneira assincrona, utilizando Jobs. 	
-	- Criar a tabela para armazenar os dados a serem importados.		 	
-	- Criar um endpoint para retornar uma análise dos dados importados e executar os seguintes cálculos:
-		- Separar os cálculos pelo dia da data registrada.
-		- Média.
-		- Mediana.
-		- Valor mínimo.
-		- Valor máximo.
-		- % acima de 10.
-		- % abaixo de -10.
-		- % entre -10 e 10.
+## 🔐 Autenticação
+6. O sistema usa Sanctum para autenticação. Rotas protegidas requerem token.
+Utilize o Postman, Insomnia ou outra ferramenta de acessos de API.
+Login:
+```text
+POST /api/login
+```
+Login para recrutador
+```bash
+{
+    "email": "recrutador@teste.com",
+    "password": "Recrutador12345@"
+}
+```
+Login para candidato
+```bash
+{
+    "email": "candidato@teste.com",
+    "password": "Candidato12345@"
+}
+```
+Logout (autenticado):
+```bash
+POST /api/logout
+```
+Header:
+```bash
+Authorization: Bearer [token]
+```
 
-##  Banco de dados
+## 📚 Rotas da API
+## 👤 Usuários
+7. Rotas para acessar as funcionalidades da aplicação (protegidas por autenticação)
 
-- O banco de dados deve ser criado utilizando Migrations do framework Laravel, e também utilizar Seeds e Factorys para popular as informações no banco de dados.
+```text
+GET /api/user - Listar usuários
+```
+```text
+GET /api/user/{uuid} - Mostrar usuário
+```
+```text
+POST /api/user - Criar usuário
+```
+```text
+PUT /api/user/{uuid} - Atualizar usuário
+```
+```text
+DELETE /api/user/{uuid} - Deletar usuário
+```
+```text
+DELETE /api/user/delete-all - Deletar todos usuários
+```
+```text
+DELETE /api/user/delete-by-uuid - Deletar por lista de UUIDs
+```
 
-##  Tecnologias a serem utilizadas
+## 🏷️ Tipos de Usuário
+```text
+GET /api/user-type - Listar tipos
+```
+```text
+GET /api/user-type/{uuid} - Mostrar tipo
+```
 
-Devem ser utilizadas as seguintes tecnologias:
-	- PHP
-	- Framework Laravel
-	- Docker (construção do ambiente de desenvolvimento)
-	- Mysql
-	- Redis
- 	- Supervisor
+## 💼 Vagas
+```text
+GET /api/vacancy - Listar vagas
+```
+```text
+GET /api/vacancy/{uuid} - Mostrar vaga
+```
+```text
+POST /api/vacancy - Criar vaga
+```
+```text
+PUT /api/vacancy/{uuid} - Atualizar vaga
+```
+```text
+PUT /api/vacancy/close/{uuid} - Fechar vaga
+```
+```text
+DELETE /api/vacancy/{uuid} - Deletar vaga
+```
+```text
+DELETE /api/vacancy/delete-all - Deletar todas vagas
+```
+```text
+DELETE /api/vacancy/delete-by-uuid - Deletar por lista de UUIDs
+```
 
-##  Entrega
+## 🏷️ Tipos de Vaga
+```text
+GET /api/vacancy-type - Listar tipos
+```
+```text
+GET /api/vacancy-type/{uuid} - Mostrar tipo
+```
 
-- Para iniciar o teste, faça um fork deste repositório; **Se você apenas clonar o repositório não vai conseguir fazer push.**
+## 📝 Candidaturas
+```text
+GET /api/application - Listar candidaturas
+```
+```text
+GET /api/application/{uuid} - Mostrar candidatura
+```
+```text
+POST /api/application - Criar candidatura
+```
+```text
+PUT /api/application/{uuid} - Atualizar candidatura
+```
+```text
+DELETE /api/application/{uuid} - Deletar candidatura
+```
+```text
+DELETE /api/application/delete-all - Deletar todas candidaturas
+```
+```text
+DELETE /api/application/delete-by-uuid - Deletar por lista de UUIDs
+```
 
-- Crie uma branch com o seu nome completo;
-- Altere o arquivo teste-pratico.md com as informações necessárias para executar o seu teste (comandos, migrations, seeds, etc);
+## 👨‍💼 Candidatos
+```text
+GET /api/candidate - Listar candidatos
+```
+```text
+GET /api/candidate/{uuid} - Mostrar candidato
+```
+```text
+POST /api/candidate - Criar candidato
+```
+```text
+PUT /api/candidate/{uuid} - Atualizar candidato
+```
+```text
+DELETE /api/candidate/{uuid} - Deletar candidato
+```
+```text
+DELETE /api/candidate/delete-all - Deletar todos candidatos
+```
+```text
+DELETE /api/candidate/delete-by-uuid - Deletar por lista de UUIDs
+```
 
-- Depois de finalizado, envie-nos o pull request;
+## 📊 CSV
+```text
+GET /api/csv/analyze - Analisar dados CSV
+```
 
-##  Bônus
+🧪 Testes
+8. Para executar os testes:
+```text
+# Rodar todos os testes
+php artisan test
 
-- Permitir deleção em massa de itens nos CRUDs.
-- Permitir que o número de itens por página possa ser definido.
-- Implementar autenticação de usuário na aplicação usando sanctum.
+# Rodar testes específicos
+php artisan test --filter NomeDoTeste
 
-##  O que será analisado?
+# Gerar relatório de cobertura
+php artisan test --coverage-html coverage-report
+```
 
-- Organização do código;
-- Aplicação de design patterns;
-- Raciocínio lógico;
-- Aplicação de testes;
-- Legibilidade;
-- Criação do ambiente com Docker.
-
-###  Boa sorte!
+## ⚙️ Variáveis de Ambiente Importantes
+```bash
+QUEUE_CONNECTION=database # Para processamento de CSV em background
+SANCTUM_STATEFUL_DOMAINS=localhost,127.0.0.1 # Domínios para autenticação
+```
